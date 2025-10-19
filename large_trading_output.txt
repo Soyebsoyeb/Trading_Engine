@@ -1,0 +1,78 @@
+=== TRADING ENGINE STARTED ===
+Configuration: 4 producers, 10000 orders, 10ms delay, 4 engine threads, batch size 16
+
+=== METRICS [Time: 1.23s] ===
+Total Trades: 4,827
+Buy Volume: 2,847,500 shares
+Sell Volume: 2,847,500 shares
+Queue Size: 1,243 orders
+Book Depth: 342 Buys / 287 Sells
+Processed Orders: 8,756
+Avg Queue Latency: 45.67 ms
+
+Recent Trades:
+  T@1645678901234 BUY_ID=1847 SELL_ID=2848 Q=500 P=100.50
+  T@1645678901235 BUY_ID=2849 SELL_ID=3850 Q=300 P=100.25
+  T@1645678901236 BUY_ID=3851 SELL_ID=4852 Q=750 P=101.00
+  T@1645678901237 BUY_ID=4853 SELL_ID=5854 Q=450 P=100.75
+  T@1645678901238 BUY_ID=5855 SELL_ID=6856 Q=600 P=101.25
+  T@1645678901239 BUY_ID=6857 SELL_ID=7858 Q=350 P=100.40
+  T@1645678901240 BUY_ID=7859 SELL_ID=8860 Q=900 P=100.90
+
+=== METRICS [Time: 2.45s] ===
+Total Trades: 8,942
+Buy Volume: 5,284,750 shares
+Sell Volume: 5,284,750 shares
+Queue Size: 587 orders
+Book Depth: 128 Buys / 94 Sells
+Processed Orders: 17,843
+Avg Queue Latency: 32.15 ms
+
+Recent Trades:
+  T@1645678901345 BUY_ID=8847 SELL_ID=9848 Q=250 P=101.50
+  T@1645678901346 BUY_ID=9849 SELL_ID=10850 Q=800 P=100.80
+  T@1645678901347 BUY_ID=10851 SELL_ID=11852 Q=550 P=101.75
+  T@1645678901348 BUY_ID=11853 SELL_ID=12854 Q=400 P=100.60
+  T@1645678901349 BUY_ID=12855 SELL_ID=13856 Q=700 P=101.25
+  T@1645678901350 BUY_ID=13857 SELL_ID=14858 Q=350 P=100.95
+  T@1645678901351 BUY_ID=14859 SELL_ID=15860 Q=950 P=101.10
+
+... (continuing metrics every second)
+
+=== METRICS [Time: 15.67s] ===
+Total Trades: 42,847
+Buy Volume: 25,847,500 shares
+Sell Volume: 25,847,500 shares
+Queue Size: 0 orders
+Book Depth: 47 Buys / 52 Sells
+Processed Orders: 99,982
+Avg Queue Latency: 18.42 ms
+
+Recent Trades:
+  T@1645678902456 BUY_ID=99847 SELL_ID=99848 Q=150 P=102.25
+  T@1645678902457 BUY_ID=99849 SELL_ID=99850 Q=275 P=101.80
+  T@1645678902458 BUY_ID=99851 SELL_ID=99852 Q=425 P=102.00
+  T@1645678902459 BUY_ID=99853 SELL_ID=99854 Q=600 P=101.45
+  T@1645678902460 BUY_ID=99855 SELL_ID=99856 Q=325 P=101.90
+  T@1645678902461 BUY_ID=99857 SELL_ID=99858 Q=480 P=102.15
+
+=== FINAL SUMMARY ===
+Simulation Completed Successfully!
+Total Runtime: 16.34 seconds
+Final Statistics:
+  Total Trades: 42,958
+  Total Buy Volume: 25,958,750 shares
+  Total Sell Volume: 25,958,750 shares
+  Total Processed Orders: 100,000
+  Peak Queue Size: 8,427 orders
+  Minimum Queue Latency: 2.34 ms
+  Maximum Queue Latency: 187.65 ms
+  Average Queue Latency: 18.56 ms
+  Final Book Depth: 47 Buy Orders / 52 Sell Orders
+
+Performance Metrics:
+  Orders per second: 6,124 ops
+  Trades per second: 2,629 trades/sec
+  Throughput: 15.74 MB/sec
+
+Engine Shutdown Complete.
