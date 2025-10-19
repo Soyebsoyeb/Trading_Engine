@@ -291,17 +291,17 @@ struct Statistics {
 };
 ```
 -------------------------------------------------------------------------------------
-### Performance Impact
-Expected Improvements:
-Latency: 10-100x reduction in queue operations
-Throughput: 2-5x increase in orders processed per second
-CPU Usage: Better utilization with less thread contention
-Scalability: Near-linear scaling with core count
---------------------------------------------------------------------------------------
+
+## Performance Improvements
+
+### Expected Improvements:
+- **Latency:** 10-100x reduction in queue operations
+- **Throughput:** 2-5x increase in orders processed per second
+- **CPU Usage:** Better utilization with less thread contention
+- **Scalability:** Near-linear scaling with core count
+
 ### Real-World Benefits:
-Predictable performance under extreme load
-No priority inversion issues
-
-Better cache locality
-
-Lower tail latency (more consistent performance)
+- **Predictable performance** under extreme load
+- **No priority inversion** issues
+- **Better cache locality**
+- **Lower tail latency** (more consistent performance)
