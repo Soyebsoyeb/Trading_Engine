@@ -1,219 +1,89 @@
-Trading Engine
-A high-performance, multi-threaded trading engine simulation built in C++ that handles real-time order matching with multi-threaded processing capabilities.
+## Trading Engine Program 
+---------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------
 
-Overview
+This is a multi-threaded trading engine simulator that mimics how real stock exchanges work. It processes buy/sell orders, matches them to create trades, and provides real-time statistics.
 
-This project implements a complete trading engine simulation that demonstrates:
-Multi-threaded order processing
-Real-time order matching with price-time priority
-Thread-safe data structures
-Performance monitoring and metrics
-Configurable trading parameters
+Think of it like a virtual stock market where:
+(i)   Producers create buy/sell orders
+(ii)  Matching Engine finds matching buy/sell orders to execute trades
+(iii) Metrics show what's happening in real-time
 
+-------------------------------------------------------------------------------------
 
-Architecture
+## (1) Order Structure - What is a Trade Order
 
-<img width="686" height="586" alt="Screenshot 2025-10-18 020401" src="https://github.com/user-attachments/assets/75a5f503-be92-4a63-ae69-e051a360303c" />
-
-
-Technical Challenges & Solutions
-Challenge 1: Thread Synchronization in Order Queue
-Problem: Multiple producer and consumer threads accessing the order queue simultaneously caused data races and inconsistent state.
-
-Solution: Implemented a thread-safe queue with mutex and condition variables:
-
-cpp
-class OrderQueue {
-    queue<Order> q;
-    mutex mtx;
-    condition_variable cv;
-    atomic<size_t> size_{0};
-
-public:
-    void push(Order &&order) {
-        {
-            lock_guard<mutex> lock(mtx);
-            q.push(std::move(order));
-            size_.fetch_add(1, memory_order_relaxed);
-        }
-        cv.notify_one();
-    }
-    
-    size_t pop_batch(vector<Order> &dest, size_t max_items, atomic<bool> &done) {
-        unique_lock<mutex> lock(mtx);
-        cv.wait_for(lock, chrono::milliseconds(50), [&]{ 
-            return !q.empty() || done.load(); 
-        });
-        // Batch processing logic
-    }
+```cpp
+struct Order {
+    int id;          // Unique order number (like ticket number)
+    char side;       // 'B' for BUY or 'S' for SELL
+    double price;    // Price per share (e.g., $100.50)
+    int quantity;    // How many shares to buy/sell
+    steady_clock::time_point created; // When order was created
 };
+```
 
+Example Orders:
 
-Challenge 2: Efficient Producer-Consumer Coordination
-Problem: Traditional approaches either busy-wait (wasting CPU) or have poor latency when new orders arrive.
+(i)  {id: 1, side: 'B', price: 100.50, quantity: 10} → "Buy 10 shares at $100.50 each"
+(ii) {id: 2, side: 'S', price: 100.00, quantity: 5} → "Sell 5 shares at $100.00 each"
 
-Solution: Used condition variables with timeout for optimal responsiveness:
+---------------------------------------------------------------------------------------
+## (2) OrderQueue Class - The Waiting Line for Orders
 
-cpp
-cv.wait_for(lock, chrono::milliseconds(50), [&]{ 
-    return !q.empty() || done.load(); 
-});
-This provides:
+```cpp
+class OrderQueue {
+    // Like a supermarket checkout line for orders
+    // Thread-safe: multiple threads can use it without problems
+};
+```
+Stores orders in a queue (first-in, first-out)
+Handles multiple threads safely
+Notifies workers when new orders arrive
 
-Immediate wakeup when orders arrive
+--------------------------------------------------------------------------------------
+## (3) OrderBook Class - The Trading Board
+```cpp
+class OrderBook {
+    vector<Order> buys;   // All BUY orders waiting
+    vector<Order> sells;  // All SELL orders waiting
+    // Plus statistics and trade history
+};
+```
 
-Periodic checks for shutdown signals
+What it does:
+(i)   Stores all active buy/sell orders
+(ii)  Matches compatible orders (when buy price ≥ sell price)
+(iii) Keeps track of trades and statistics
 
-No CPU waste during idle periods
+---------------------------------------------------------------------------------------
+## (4) Main Functions - The Workers
+## Market Producer - Order Creator
 
+```cpp
+void marketProducer(...)
+```
+Creates fake buy/sell orders for testing
+Can control how fast orders are created
 
+## Matching Engine - The Brain
+```cpp
+void matchingEngineWorker(...)
+```
+Takes orders from queue
+Adds them to the order book
+Finds and executes matching trades
 
-Challenge 3: Fair Order Matching Algorithm
-Problem: Needed to implement price-time priority matching while maintaining thread safety and performance.
+## Metrics Printer - The Reporter
+```cpp
+void metricsPrinter(...)
+```
+Shows real-time statistics every second
+Displays recent trades and performance metrics
 
-Solution: Developed a dual-sorting approach with fine-grained locking:
+---------------------------------------------------------------------------------------
 
-cpp
-void matchOrders() {
-    lock_guard<mutex> lock(ob_mtx);
-    
-    // Price-time priority: higher buys first, lower sells first
-    auto buy_cmp = [](const Order &a, const Order &b){
-        if (a.price != b.price) return a.price > b.price;
-        return a.created < b.created;
-    };
-    auto sell_cmp = [](const Order &a, const Order &b){
-        if (a.price != b.price) return a.price < b.price;
-        return a.created < b.created;
-    };
+## How It All Works Together
 
-    sort(buys.begin(), buys.end(), buy_cmp);
-    sort(sells.begin(), sells.end(), sell_cmp);
-    
-    // Cross matching when prices overlap
-    while(!buys.empty() && !sells.empty() && 
-          buys.front().price >= sells.front().price) {
-        // Execute trade logic
-    }
-}
-
-
-
-
-
-Challenge 4: Memory Management and Resource Limits
-Problem: Unbounded growth of trade logs could exhaust memory during long runs.
-
-Solution: Implemented fixed-size circular buffer for trade logs:
-
-cpp
-deque<string> tradeLog;
-size_t tradeLogLimit = 2000;
-
-// In logging logic:
-tradeLog.push_back(oss.str());
-if(tradeLog.size() > tradeLogLimit) tradeLog.pop_front();
-
-
-
-
-
-Challenge 5: Performance Under High Load
-Problem: Processing orders one-by-one caused excessive locking overhead.
-
-Solution: Implemented batch processing to amortize locking costs:
-
-cpp
-vector<Order> batch;
-batch.reserve(batchSize);
-
-size_t got = oq.pop_batch(batch, batchSize, done);
-if(got > 0) {
-    // Process entire batch with single lock acquisition
-    for(const auto &o: batch) ob.addOrder(o);
-    ob.matchOrders();
-}
-
-
-
-
-Challenge 6: Graceful Shutdown Handling
-Problem: Threads needed to cleanly exit on signal interrupts without data loss.
-
-Solution: Atomic flags with coordinated shutdown sequence:
-
-cpp
-atomic<bool> globalStop{false};
-atomic<bool> done(false);
-
-void handle_sigint(int) {
-    globalStop.store(true);
-}
-
-// In worker threads:
-while(!done.load() || !oq.empty()) {
-    // Check shutdown flag periodically
-}
-Key Features
-Multi-threaded Architecture: Separate producer, matching engine, and metrics threads
-
-Batch Processing: Configurable batch sizes (default: 16 orders/batch)
-
-Thread-safe Data Structures: Lock-based queues with condition variables
-
-Real-time Metrics: Latency tracking, volume statistics, trade logging
-
-Configurable Parameters: Tunable for different performance characteristics
-
-Usage
-Compilation
-bash
-g++ -std=c++17 -pthread -O2 trading_engine.cpp -o trading_engine
-Running
-bash
-# Default configuration
-./trading_engine
-
-# Custom configuration
-./trading_engine <num_producers> <orders_per_producer> <producer_delay_us> <engine_threads> <batch_size>
-
-# High-performance example
-./trading_engine 4 10000 10 4 32
-Configuration Parameters
-Parameter	Description	Default
-num_producers	Order producer threads	2
-orders_per_producer	Orders per producer	5000
-producer_delay_us	Delay between orders (0=burst)	20
-engine_threads	Matching engine threads	2
-batch_size	Orders processed per batch	16
-Performance Metrics
-The system tracks and displays:
-
-Order queue latency statistics
-
-Trade execution volumes
-
-Order book depth
-
-Processing throughput
-
-Recent trade history
-
-Limitations & Future Enhancements
-Basic price-time matching only
-
-In-memory storage (no persistence)
-
-Market orders only (no limit orders)
-
-Simulated data input (no network interface)
-
-
-
-
-
-This implementation provides a solid foundation for understanding high-frequency trading systems and can be extended with additional order types, persistence layers, and network interfaces.
-
-
-
+<img width="780" height="419" alt="Screenshot 2025-10-20 031441" src="https://github.com/user-attachments/assets/b9ecad53-ea16-421f-a01d-635e41d38269" />
 
